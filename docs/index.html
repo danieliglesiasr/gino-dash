@@ -1165,14 +1165,35 @@ function renderHoraNew(){
 }
 
 function actualizarPZ() {
-  // En GitHub Pages: recargar página para obtener últimos datos publicados
+  // En GitHub Pages: intentar servidor local primero, si no hay → recargar página
   if(location.hostname.includes('github.io')){
     const st=document.getElementById('horaStatus');
     const btn=document.getElementById('btnActPZ');
-    if(st) st.textContent='⏳ Cargando últimos datos...';
     if(btn){btn.disabled=true;btn.textContent='⏳';}
-    // Recargar sin caché para obtener la versión más reciente subida por el PC
-    setTimeout(function(){location.reload(true);}, 300);
+    if(st) st.textContent='⏳ Verificando servidor...';
+    // Intentar servidor local (PC encendido)
+    const ctrlLocal=new AbortController();
+    setTimeout(()=>ctrlLocal.abort(),3000);
+    fetch('http://localhost:8766/ping',{signal:ctrlLocal.signal,headers:{'ngrok-skip-browser-warning':'true'}})
+      .then(r=>r.json())
+      .then(()=>{
+        // Servidor local disponible — usar directamente
+        if(st) st.textContent='⏳ Actualizando...';
+        const ctrl2=new AbortController();setTimeout(()=>ctrl2.abort(),330000);
+        return fetch('http://localhost:8766/actualizar_pz?sin_notif=1',{signal:ctrl2.signal,headers:{'ngrok-skip-browser-warning':'true'}})
+          .then(r=>r.json())
+          .then(d=>{
+            if(st) st.textContent=(d.ok?'✅ ':'⚠️ ')+d.message;
+            if(d.ok && d.new_dates){ Object.assign(HORA_DATA,d.new_dates); if(d.status) HORA_STATUS=d.status; }
+            try{ renderHoraNew(); }catch(e){}
+            if(btn){btn.disabled=false;btn.textContent='↻ Actualizar';}
+          });
+      })
+      .catch(()=>{
+        // Sin servidor local — recargar desde GitHub (datos del último push)
+        if(st) st.textContent='⏳ Cargando últimos datos publicados...';
+        setTimeout(function(){location.reload(true);},300);
+      });
     return;
   }
   const st  = document.getElementById('horaStatus');
