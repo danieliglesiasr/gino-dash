@@ -122,6 +122,13 @@ hr{border:none;border-top:1px solid var(--bdr);margin:14px 0}
 .hora-nav button:hover{border-color:var(--ac)}
 .hora-date{min-width:110px;text-align:center;font-weight:700;font-size:13px;color:var(--tx)}
 .hora-update{background:var(--ac);border:none;color:#fff;padding:5px 14px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600}
+.modo-btn{background:var(--card2);border:1px solid var(--bdr);color:var(--mu);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .15s}
+.modo-btn.activo{border:none;color:#fff;font-weight:600}
+.modo-btn.activo.m-acum{background:var(--ac)}
+.modo-btn.activo.m-hora{background:var(--ac)}
+.modo-btn.activo.m-hoy{background:#e67e22}
+.modo-btn.activo.m-hora-act{background:#27ae60}
+.modo-btn.activo.m-semana{background:#8e44ad}
 .hora-update:hover{opacity:.85}
 .hora-status{font-size:10px;color:var(--mu)}
 .hora-main{padding:14px 20px}
@@ -380,17 +387,17 @@ hr{border:none;border-top:1px solid var(--bdr);margin:14px 0}
       <div style="align-self:center;display:flex;flex-direction:column;gap:8px">
         <!-- Toggle Acumulado / Por hora -->
         <div style="display:flex;gap:4px">
-          <button id="hModeAcum" onclick="horaSetMode('acum')"
+          <button id="hModeAcum" onclick="horaSetMode('acum')" class="modo-btn m-acum activo"
             style="background:var(--ac);border:none;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600">Acumulado</button>
-          <button id="hModeHora" onclick="horaSetMode('hora')"
+          <button id="hModeHora" onclick="horaSetMode('hora')" class="modo-btn m-hora"
             style="background:var(--card2);border:1px solid var(--bdr);color:var(--mu);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px">Por hora</button>
-          <button id="hModeHoy" onclick="horaVerHoy()"
+          <button id="hModeHoy" onclick="horaVerHoy()" class="modo-btn m-hoy"
             title="Ver solo hoy, horas 00:00 → ahora"
             style="background:var(--card2);border:1px solid var(--bdr);color:var(--mu);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px">📅 Hoy</button>
-          <button id="hModeHoraActual" onclick="horaVerHoraActual()"
+          <button id="hModeHoraActual" onclick="horaVerHoraActual()" class="modo-btn m-hora-act"
             title="Ver solo la hora en curso"
             style="background:var(--card2);border:1px solid var(--bdr);color:var(--mu);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px">⏱ Hora</button>
-          <button id="hModeSemana" onclick="horaVerSemana()"
+          <button id="hModeSemana" onclick="horaVerSemana()" class="modo-btn m-semana"
             title="Semana completa: días cerrados + hoy hasta ahora vs LY"
             style="background:var(--card2);border:1px solid var(--bdr);color:var(--mu);padding:5px 12px;border-radius:5px;cursor:pointer;font-size:11px">📊 Semana</button>
         </div>
@@ -1002,12 +1009,7 @@ function horaVerSemana(){
   hHourSel=null; hMode="acum";
   buildSelDropdowns("B"); buildDayBtns("A"); buildDayBtns("B"); buildHourBtns();
   renderSemanaNow();
-  ["hModeAcum","hModeHora","hModeHoy","hModeHoraActual"].forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){b.style.background="var(--card2)";b.style.color="var(--mu)";b.style.border="1px solid var(--bdr)";b.style.fontWeight="400";}
-  });
-  const btn=document.getElementById("hModeSemana");
-  if(btn){btn.style.background="#8e44ad";btn.style.color="#fff";btn.style.border="none";btn.style.fontWeight="600";}
+  setModoActivo('hModeSemana');
 }
 
 
@@ -1035,12 +1037,7 @@ function horaVerHoraActual(){
   renderHoraNew();
 
   // Estilos botones
-  ['hModeAcum','hModeHora','hModeHoy'].forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){b.style.background='var(--card2)';b.style.color='var(--mu)';b.style.border='1px solid var(--bdr)';b.style.fontWeight='400';}
-  });
-  const btn=document.getElementById('hModeHoraActual');
-  if(btn){btn.style.background='var(--ac)';btn.style.color='#fff';btn.style.border='none';btn.style.fontWeight='600';}
+  setModoActivo('hModeHoraActual');
 }
 
 function horaVerHoy(){
@@ -1079,14 +1076,23 @@ function horaVerHoy(){
   if(bh) { bh.style.background='var(--card2)'; bh.style.color='var(--mu)'; bh.style.border='1px solid var(--bdr)'; bh.style.fontWeight='400'; }
 }
 
+
+function setModoActivo(idActivo){
+  ["hModeAcum","hModeHora","hModeHoy","hModeHoraActual","hModeSemana"].forEach(id=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    b.classList.remove("activo");
+    // resetear estilos inline que puedan interferir
+    b.style.background=""; b.style.color=""; b.style.border=""; b.style.fontWeight="";
+  });
+  const act=document.getElementById(idActivo);
+  if(act) act.classList.add("activo");
+}
 function horaSetMode(m){
   _hSemanaMode=false;
   _hSemanaMode=false;
   hMode=m;
-  const a=document.getElementById('hModeAcum');
-  const b=document.getElementById('hModeHora');
-  if(a){a.style.background=m==='acum'?'var(--ac)':'var(--card2)';a.style.color=m==='acum'?'#fff':'var(--mu)';a.style.border=m==='acum'?'none':'1px solid var(--bdr)';}
-  if(b){b.style.background=m==='hora'?'var(--ac)':'var(--card2)';b.style.color=m==='hora'?'#fff':'var(--mu)';b.style.border=m==='hora'?'none':'1px solid var(--bdr)';}
+  setModoActivo(m==='acum'?'hModeAcum':'hModeHora');
   renderHoraNew();
 }
 
