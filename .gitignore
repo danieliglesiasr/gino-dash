@@ -1,0 +1,17 @@
+﻿pz_config.json
+notif_config.json
+hora_config.json
+ngrok_config.json
+pz_state.json
+*.log
+*.txt
+*.csv
+*.old
+*.new
+__pycache__/
+.pz_updating
+ventas_cache.json
+pedidos_totals.json
+Descargas Vta x hora/
+Base ventas diarias odoo/
+Base ventas por hora/
