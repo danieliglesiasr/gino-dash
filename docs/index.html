@@ -1165,6 +1165,12 @@ function renderHoraNew(){
 }
 
 function actualizarPZ() {
+  // En GitHub Pages no hay servidor local — mostrar aviso
+  if(location.hostname.includes('github.io')){
+    const st=document.getElementById('horaStatus');
+    if(st) st.textContent='ℹ️ Datos al ' + (HORA_STATUS||'último corte') + ' — Actualizar solo disponible con PC encendido';
+    return;
+  }
   const st  = document.getElementById('horaStatus');
   const ult = document.getElementById('horaUltAct');
   const btn = document.getElementById('btnActPZ');
