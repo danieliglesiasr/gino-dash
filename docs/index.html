@@ -807,7 +807,20 @@ function fH(n) {
   return '$ '+Math.round(n).toLocaleString('es-CL');
 }
 
-function renderHora() { renderHoraNew(); }
+function renderHora() {
+  try{
+    const _mr=sessionStorage.getItem('pz_modo_restore');
+    if(_mr){
+      sessionStorage.removeItem('pz_modo_restore');
+      if(_mr==='hModeHoy'){horaVerHoy();return;}
+      if(_mr==='hModeHoraActual'){horaVerHoraActual();return;}
+      if(_mr==='hModeSemana'){horaVerSemana();return;}
+      if(_mr==='hModeProyec'){horaVerProyeccion();return;}
+      if(_mr==='hModeHora'){horaSetMode('hora');return;}
+    }
+  }catch(e){}
+  renderHoraNew();
+}
 
 function isoWeekDates(year,week){
   const jan4=new Date(year,0,4);
@@ -1424,20 +1437,14 @@ function actualizarPZ() {
         }
         if (d.status) HORA_STATUS = d.status;
         try {
-          // Mantener selección actual de días — no resetear
-          const enModoHoy = document.getElementById('hModeHoy') &&
-                            document.getElementById('hModeHoy').style.fontWeight === '600';
-          const enModoHoraAct = document.getElementById('hModeHoraActual') &&
-                            document.getElementById('hModeHoraActual').style.fontWeight === '600';
-          const enModoSemana = document.getElementById('hModeSemana') &&
-                            document.getElementById('hModeSemana').style.fontWeight === '600';
-          if(enModoHoy){ horaVerHoy(); }
-          else if(enModoHoraAct){ horaVerHoraActual(); }
-          else if(enModoSemana){ horaVerSemana(); }
-          else {
-            // Reinicializar a semana/día actual con los datos frescos
-            try { initHora(); } catch(e){ renderHoraNew(); }
-          }
+          const _mA=["hModeAcum","hModeHora","hModeHoy","hModeHoraActual","hModeSemana","hModeProyec"]
+            .find(id=>{const b=document.getElementById(id);return b&&b.classList.contains('activo');});
+          if(_mA==='hModeHoy') horaVerHoy();
+          else if(_mA==='hModeHoraActual') horaVerHoraActual();
+          else if(_mA==='hModeSemana') horaVerSemana();
+          else if(_mA==='hModeProyec') horaVerProyeccion();
+          else if(_mA==='hModeHora') horaSetMode('hora');
+          else renderHoraNew();
         } catch(e) {
           if (st) st.textContent = '⚠️ Error render: ' + e.message;
         }
