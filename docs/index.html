@@ -1383,12 +1383,24 @@ function actualizarPZ() {
           .then(d=>{
             if(st) st.textContent=(d.ok?'✅ ':'⚠️ ')+d.message;
             if(d.ok && d.new_dates){ Object.assign(HORA_DATA,d.new_dates); if(d.status) HORA_STATUS=d.status; }
-            try{ renderHoraNew(); }catch(e){}
+            try{
+              const _mA=["hModeAcum","hModeHora","hModeHoy","hModeHoraActual","hModeSemana","hModeProyec"]
+                .find(id=>{const b=document.getElementById(id);return b&&b.classList.contains('activo');});
+              if(_mA==='hModeHoy') horaVerHoy();
+              else if(_mA==='hModeHoraActual') horaVerHoraActual();
+              else if(_mA==='hModeSemana') horaVerSemana();
+              else if(_mA==='hModeProyec') horaVerProyeccion();
+              else renderHoraNew();
+            }catch(e){}
             if(btn){btn.disabled=false;btn.textContent='↻ Actualizar';}
           });
       })
       .catch(()=>{
         // Sin servidor local — recargar desde GitHub (datos del último push)
+        // Guardar modo activo para restaurar después del reload
+        const _mA=["hModeAcum","hModeHora","hModeHoy","hModeHoraActual","hModeSemana","hModeProyec"]
+          .find(id=>{const b=document.getElementById(id);return b&&b.classList.contains('activo');})||'';
+        try{sessionStorage.setItem('pz_modo_restore',_mA);}catch(e){}
         if(st) st.textContent='⏳ Cargando últimos datos publicados...';
         setTimeout(function(){location.reload(true);},300);
       });
@@ -1581,6 +1593,18 @@ function cargarHoraDataHTTP(){
         HORA_DATA=d.by_date;
         if(d.status) HORA_STATUS=d.status;
         initHora();
+        // Restaurar modo si venimos de un reload por Actualizar
+        try{
+          const _mr=sessionStorage.getItem('pz_modo_restore');
+          if(_mr){
+            sessionStorage.removeItem('pz_modo_restore');
+            if(_mr==='hModeHoy') horaVerHoy();
+            else if(_mr==='hModeHoraActual') horaVerHoraActual();
+            else if(_mr==='hModeSemana') horaVerSemana();
+            else if(_mr==='hModeProyec') horaVerProyeccion();
+            else if(_mr==='hModeHora') horaSetMode('hora');
+          }
+        }catch(e){}
         if(st) st.textContent='';
       }
     })
